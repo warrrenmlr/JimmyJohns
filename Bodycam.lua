@@ -33,7 +33,7 @@ tabs["Main"]:Checkbox({
     Callback = function(self, Value: boolean)
         if Value then
             local LOCK_DISTANCE = 100 -- studs
-            local AIM_THRESHOLD = 50 -- pixels
+            local AIM_THRESHOLD = 125 -- pixels
 
             local gui = Instance.new("ScreenGui")
             gui.Name = "AimThresholdCircle"
