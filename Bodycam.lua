@@ -101,7 +101,7 @@ tabs["Main"]:Checkbox({
                 local closestNPC, closestDist = nil, math.huge
 
                 for _, npc in ipairs(suspectsFolder:GetChildren()) do
-                    if (npc.Name == "Suspect_Regular" or npc.Name == "Suspect_Heavey" or npc.Name == "Suspect_LawranceAccomplice" or npc.Name == "Suspect_LawranceFairfax")
+                    if (npc.Name == "Suspect_Regular" or npc.Name == "Suspect_Heavy" or npc.Name == "Suspect_LawranceAccomplice" or npc.Name == "Suspect_LawranceFairfax")
                     and npc:FindFirstChild("Head")
                     and isAlive(npc) then
 
@@ -143,7 +143,7 @@ tabs["Main"]:Checkbox({
         if Value then
             if suspectsFolder then
                 for _, npc in ipairs(suspectsFolder:GetChildren()) do
-                    if (npc.Name == "Suspect_Regular" or npc.Name == "Suspect_Heavey" or npc.Name == "Suspect_LawranceAccomplice" or npc.Name == "Suspect_LawranceFairfax") then
+                    if (npc.Name == "Suspect_Regular" or npc.Name == "Suspect_Heavy" or npc.Name == "Suspect_LawranceAccomplice" or npc.Name == "Suspect_LawranceFairfax") then
                         local highlight = Instance.new("Highlight")
                         highlight.Adornee = npc
                         highlight.FillColor = Color3.fromRGB(255, 0, 0) -- Red fill
@@ -395,7 +395,7 @@ local function getAllSuspectPrompts()
     local prompts = {}
 
     for _, suspect in ipairs(suspectsFolder:GetChildren()) do
-        if suspect.Name == "Suspect_Regular" or suspect.Name == "Suspect_Heavey" or suspect.Name == "Suspect_LawranceAccomplice" or suspect.Name == "Suspect_LawranceFairfax" then
+        if suspect.Name == "Suspect_Regular" or suspect.Name == "Suspect_Heavy" or suspect.Name == "Suspect_LawranceAccomplice" or suspect.Name == "Suspect_LawranceFairfax" then
             local torso = suspect:FindFirstChild("Torso")
             if torso then
                 local prompt = torso:FindFirstChild("ProximityPromptReportDead")
