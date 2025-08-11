@@ -32,7 +32,7 @@ tabs["Main"]:Checkbox({
     Label = "Aimbot",
     Callback = function(self, Value: boolean)
         if Value then
-            local LOCK_DISTANCE = 100 -- studs
+            local LOCK_DISTANCE = 300 -- studs
             local AIM_THRESHOLD = 125 -- pixels
 
             local gui = Instance.new("ScreenGui")
@@ -253,10 +253,18 @@ tabs["Gun Mods"]:Button({
                 ["camRecoilLeft"] = v1 and { 0, 0 } or { 0, 0 },
                 ["camRecoilRight"] = v1 and { 0, 0 } or { 0, 0 }
             }
+            ACS_Settings.gunRecoil = {
+                ["gunRecoilUp"] = { 0, 0 },
+                ["gunRecoilTilt"] = { 0, 0 },
+                ["gunRecoilLeft"] = { 0, 0 },
+                ["gunRecoilRight"] = { 0, 0 }
+            }
             ACS_Settings.MinSpread = 0
             ACS_Settings.MaxSpread = 0
             ACS_Settings.BulletDrop = 0
-            ACS_Settings.MuzzleVelocity = 6000
+            ACS_Settings.MuzzleVelocity = 10000
+            ACS_Settings.AimInaccuracyStepAmount = 0
+            ACS_Settings.AimInaccuracyDecrease = 0
         end
         wait(1)
         game:GetService('VirtualInputManager'):SendKeyEvent(true, Enum.KeyCode.One, false, game)
@@ -345,15 +353,19 @@ local evidenceNames = {
     "Pile of money",
     "MoneyStack",
     "GunCarton",
-    "HardDrive"
+    "HardDrive",
+    "Radio",
+    "Radio",
+    "Cargo"
 }
 local prompts = {}
+
+
 local function collectPrompts()
-    prompts = {}  -- reset each time to reflect current map state
+    prompts = {} -- reset each time to reflect current map state
     local evidenceFolder = workspace.GAME.Suspects.Evidence
-    for _, name in ipairs(evidenceNames) do
-        local evidence = evidenceFolder:FindFirstChild(name)
-        if evidence and evidence:FindFirstChild("EvidenceBag") then
+    for _, evidence in ipairs(evidenceFolder:GetChildren()) do
+        if table.find(evidenceNames, evidence.Name) and evidence:FindFirstChild("EvidenceBag") then
             local attachment = evidence.EvidenceBag:FindFirstChild("Attachment")
             if attachment then
                 local prompt = attachment:FindFirstChild("ProximityPrompt")
@@ -364,6 +376,7 @@ local function collectPrompts()
         end
     end
 end
+
 local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local root = character:WaitForChild("HumanoidRootPart")
 local EvidenceConnection
@@ -378,7 +391,6 @@ EvidenceConnection = RunService.RenderStepped:Connect(function()
                 local distance = (root.Position - promptPosition).Magnitude
                 if distance <= prompt.MaxActivationDistance then
                     fireproximityprompt(prompt)
-                    table.remove(prompts, i)
                 end
             else
                 table.remove(prompts, i)
@@ -489,7 +501,7 @@ local function getAllPrompts()
     local prompts = {}
 
     for _, suspect in ipairs(suspectsFolder:GetChildren()) do
-        if suspect.Name == "Civilian_LadyFairfax" or suspect.Name == "Civilian_HostageMMB" or suspect.Name == "Civilian_Madame" or suspect.Name == "Civilian_Melinda" then
+        if suspect.Name == "Civilian_LadyFairfax" or suspect.Name == "Civilian_HostageMMB" or suspect.Name == "Civilian_Madame" or suspect.Name == "Civilian_Melinda" or suspect.Name == "Civilian_Worker" then
             local leftArm = suspect:FindFirstChild("Left Arm")
             if leftArm then
                 local attachment = leftArm:FindFirstChild("Attachment")
@@ -564,3 +576,5 @@ ArrestConnection = RunService.RenderStepped:Connect(function()
         end
     end
 end)
+
+--You def like femboys
