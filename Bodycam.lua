@@ -21,6 +21,7 @@ local StarterGui = game:GetService("StarterGui")
 local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
+local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 local character = LocalPlayer.Character or player.CharacterAdded:Wait()
 local Camera = Workspace.CurrentCamera
 local humanoid = character:WaitForChild("Humanoid")
@@ -268,6 +269,42 @@ tabs["Extras"]:Button({
         loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
     end
 })
+local function showMessage(msg)
+    -- Create ScreenGui
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "TempMessage"
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = playerGui
+
+    -- Create TextLabel
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0, 300, 0, 50)
+    label.Position = UDim2.new(0.5, 0, 0.5, 0)
+    label.AnchorPoint = Vector2.new(0.5, 0.5)
+    label.BackgroundTransparency = 1
+    label.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextScaled = true
+    label.Font = Enum.Font.SourceSansBold
+    label.Text = msg
+    label.Parent = screenGui
+
+    -- Remove after 1 second
+    task.delay(3, function()
+        if screenGui and screenGui.Parent then
+            screenGui:Destroy()
+        end
+    end)
+end
+tabs["Extras"]:Button({
+    Text = "Discord",
+    Callback = function()
+        local textToCopy = "discord.gg/NVsvWfxv3K"
+        setclipboard(textToCopy)
+        showMessage("Copied Invite")
+        
+    end
+})
 local AutoEvidence
 tabs["Auto"]:Checkbox({
     Value = false,
@@ -353,8 +390,6 @@ EvidenceConnection = RunService.RenderStepped:Connect(function()
         end
     end
 end)
-
-
 local function getAllSuspectPrompts()
     local suspectsFolder = workspace:WaitForChild("GAME"):WaitForChild("Suspects")
     local prompts = {}
@@ -404,7 +439,6 @@ ReportConnection = RunService.RenderStepped:Connect(function()
         end
     end
 end)
-
 local function getAllDoorPrompts()
     local doorsFolder = workspace:WaitForChild("GAME"):WaitForChild("Doors")
     local prompts = {}
