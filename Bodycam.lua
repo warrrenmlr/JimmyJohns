@@ -243,8 +243,8 @@ tabs["Gun Mods"]:Button({
         if gunSettingsModule and gunSettingsModule:IsA("ModuleScript") then
             local ACS_Settings = require(gunSettingsModule)
 
-            ACS_Settings.Ammo = 10000
-            ACS_Settings.AmmoInGun = 10000
+            ACS_Settings.Ammo = 1000
+            ACS_Settings.AmmoInGun = 1000
             --ACS_Settings.ShootRate = 12000
             --ACS_Settings.ShootType = 3
             ACS_Settings.camRecoil = {
