@@ -1,11 +1,11 @@
 local ReGui = loadstring(game:HttpGet('https://raw.githubusercontent.com/depthso/Dear-ReGui/refs/heads/main/ReGui.lua'))()
 local Window = ReGui:TabsWindow({
-    Title = "Fuck Ye",
+    Title = "Cats are pretty cool icl",
     Size = UDim2.fromOffset(300, 250)
 })
 
 local tabs = {}
-local Names = {"Main", "Char", "Gun Mods", "Dev", "In Testing"}
+local Names = {"Main", "Char", "Auto", "Gun Mods", "Extras"}
 
 for _, Name in next, Names do
     tabs[Name] = Window:CreateTab({ Name = Name })
@@ -218,18 +218,18 @@ tabs["Main"]:Checkbox({
     end
 })
 local walkspeed = 23
-tabs["Main"]:Button({
+tabs["Char"]:Button({
     Text = "Walkspeed",
     Callback = function()
         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = walkspeed
     end
 })
-tabs["Main"]:SliderInt({
-    Label = "Walkspeed Set",
-    Value = 23,
-    Minimum = 1,
-    Maximum = 30,
-})
+--tabs["Main"]:SliderInt({
+    --Label = "Walkspeed Set",
+    --Value = 23,
+    --Minimum = 1,
+    --Maximum = 30,
+--})
 
 tabs["Gun Mods"]:Button({
     Text = "m4 inf ammo",
@@ -262,14 +262,14 @@ tabs["Gun Mods"]:Button({
         game:GetService('VirtualInputManager'):SendKeyEvent(false, Enum.KeyCode.One, false, game)
     end
 })
-tabs["Dev"]:Button({
+tabs["Extras"]:Button({
     Text = "Infinite Yeild",
     Callback = function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
     end
 })
 local AutoEvidence
-tabs["In Testing"]:Checkbox({
+tabs["Auto"]:Checkbox({
     Value = false,
     Label = "Auto Collect Evidence",
     Callback = function(self, Value: boolean)
@@ -277,7 +277,7 @@ tabs["In Testing"]:Checkbox({
     end
 })
 local AutoReport
-tabs["In Testing"]:Checkbox({
+tabs["Auto"]:Checkbox({
     Value = false,
     Label = "Auto Report Suspects",
     Callback = function(self, Value: boolean)
@@ -285,7 +285,7 @@ tabs["In Testing"]:Checkbox({
     end
 })
 local AutoDoor
-tabs["In Testing"]:Checkbox({
+tabs["Auto"]:Checkbox({
     Value = false,
     Label = "Auto Breach Doors",
     Callback = function(self, Value: boolean)
@@ -293,7 +293,7 @@ tabs["In Testing"]:Checkbox({
     end
 })
 local AutoArrest
-tabs["In Testing"]:Checkbox({
+tabs["Auto"]:Checkbox({
     Value = false, 
     Label = "Auto Arrest Civilians",
     Callback = function(self, Value: boolean)
