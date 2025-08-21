@@ -1,3 +1,5 @@
+--Known issue with checkboxes/various UI elements not being visible. Everything still works, and there is no way to currently fix this without making my own gui. Which i'm too lazy to do. 
+
 local ReGui = loadstring(game:HttpGet('https://raw.githubusercontent.com/depthso/Dear-ReGui/refs/heads/main/ReGui.lua'))()
 local Window = ReGui:TabsWindow({
     Title = "Cats are pretty cool icl",
