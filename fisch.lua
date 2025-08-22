@@ -1,3 +1,5 @@
+--This program is currently abandonded as i dont feel like playing fisch no more. All code works, but many tps are missing. Might upd later.
+
 local ReGui = loadstring(game:HttpGet('https://raw.githubusercontent.com/depthso/Dear-ReGui/refs/heads/main/ReGui.lua'))()
 local Window = ReGui:TabsWindow({
     Title = "Tarnished is my goat <3",
