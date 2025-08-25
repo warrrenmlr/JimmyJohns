@@ -1,5 +1,3 @@
---Known issue with checkboxes/various UI elements not being visible. Everything still works, and there is no way to currently fix this without making my own gui. Which i'm too lazy to do. 
-
 local ReGui = loadstring(game:HttpGet('https://raw.githubusercontent.com/depthso/Dear-ReGui/refs/heads/main/ReGui.lua'))()
 local Window = ReGui:TabsWindow({
     Title = "Cats are pretty cool icl",
@@ -24,18 +22,18 @@ local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
-local character = LocalPlayer.Character or player.CharacterAdded:Wait()
+local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Camera = Workspace.CurrentCamera
 local humanoid = character:WaitForChild("Humanoid")
 local rootPart = character:WaitForChild("HumanoidRootPart")
 
+local AimFOV = 125
 tabs["Main"]:Checkbox({
     Value = false,
     Label = "Aimbot",
     Callback = function(self, Value: boolean)
         if Value then
             local LOCK_DISTANCE = 300 -- studs
-            local AIM_THRESHOLD = 125 -- pixels
 
             local gui = Instance.new("ScreenGui")
             gui.Name = "AimThresholdCircle"
@@ -43,10 +41,11 @@ tabs["Main"]:Checkbox({
             gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
             local circle = Instance.new("Frame")
-            circle.Size = UDim2.new(0, AIM_THRESHOLD * 2, 0, AIM_THRESHOLD * 2)
+            circle.Size = UDim2.new(0, AimFOV * 2, 0, AimFOV * 2)
             circle.Position = UDim2.new(0.5, 0, 0.475, 0)
             circle.AnchorPoint = Vector2.new(0.5, 0.5)
             circle.BackgroundTransparency = 1
+            circle.Parent = gui
 
             local uiCorner = Instance.new("UICorner")
             uiCorner.CornerRadius = UDim.new(1, 0)
@@ -74,7 +73,9 @@ tabs["Main"]:Checkbox({
             plusVertical.BorderSizePixel = 0
             plusVertical.Parent = circle
 
-            circle.Parent = gui
+            RunService.RenderStepped:Connect(function()
+                circle.Size = UDim2.new(0, AimFOV * 2, 0, AimFOV * 2)
+            end)
 
             -- Function to check if NPC is alive
             local function isAlive(npc)
@@ -122,7 +123,7 @@ tabs["Main"]:Checkbox({
                         end
                     end
                 end
-                if closestNPC and closestDist <= AIM_THRESHOLD then
+                if closestNPC and closestDist <= AimFOV then
                     return closestNPC.Head
                 end
                 return nil
@@ -136,6 +137,15 @@ tabs["Main"]:Checkbox({
                 end
             end)
         end
+    end
+})
+tabs["Main"]:SliderInt({
+    Label = "FOV",
+    Value = 125,
+    Minimum = 50,
+    Maximum = 500,
+    Callback = function(self, Value)
+        AimFOV = Value
     end
 })
 tabs["Main"]:Checkbox({
@@ -220,20 +230,32 @@ tabs["Main"]:Checkbox({
         end
     end
 })
-local walkspeed = 23
-tabs["Char"]:Button({
-    Text = "Walkspeed",
-    Callback = function()
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = walkspeed
+local walkspeed = 16
+local walkspeedToggle = false
+tabs["Char"]:Checkbox({
+    Value = false,
+    Label = "Walkspeed Toggle",
+    Callback = function(self, Value)
+        walkspeedToggle = Value
     end
 })
---tabs["Main"]:SliderInt({
-    --Label = "Walkspeed Set",
-    --Value = 23,
-    --Minimum = 1,
-    --Maximum = 30,
---})
-
+tabs["Char"]:SliderInt({
+    Label = "Walkspeed Set",
+    Value = 16,
+    Minimum = 1,
+    Maximum = 30,
+    Callback = function(self, Value)
+        walkspeed = Value
+        
+    end
+})
+RunService.RenderStepped:Connect(function()
+    if walkspeedToggle then
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = walkspeed
+    else
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+    end
+end)
 tabs["Gun Mods"]:Button({
     Text = "m4 inf ammo",
     Callback = function()
@@ -267,6 +289,11 @@ tabs["Gun Mods"]:Button({
             ACS_Settings.MuzzleVelocity = 10000
             ACS_Settings.AimInaccuracyStepAmount = 0
             ACS_Settings.AimInaccuracyDecrease = 0
+            ACS_Settings.AimRecoilReduction = 0
+            ACS_Settings.AimSpreadReduction = 0
+            ACS_Settings.MinRecoilPower = 0
+            ACS_Settings.MaxRecoilPower = 0
+            ACS_Settings.RecoilPowerStepAmount = 0
         end
         wait(1)
         game:GetService('VirtualInputManager'):SendKeyEvent(true, Enum.KeyCode.One, false, game)
