@@ -115,3 +115,12 @@ tabs["Main"]:Checkbox({
         end
     end
 })
+
+tabs["Main"]:SliderColor3({
+    Value = Color3.fromRGB(255,255,255),
+    Label = "Color",
+    Callback = function(self, Value: Color3)
+        AimColor = Value
+    end
+
+})
