@@ -127,7 +127,6 @@ tabs["Main"]:SliderColor3({
 
 --===Testing out a new GUI overhaul, will come with better working features as well===--
 local RunService = game:GetService("RunService")
-
 local ReGui = require(game.ReplicatedStorage.ReGui)
 ReGui:Init()
 ReGui:DefineTheme("Cherry", {
@@ -271,12 +270,13 @@ Defining()
 --//Aimbot Section
 local AimFOV = 125
 local AimColor = Color3.fromRGB(255,255,255)
+local AimSpeed = "instant"
 AimbotSection:Checkbox({
     Value = false,
-    Label = "Aimbot",
+    Label = "Enabled",
     Callback = function(self, Value: boolean)
         if Value then
-            local LOCK_DISTANCE = 300 -- studs
+            local LOCK_DISTANCE = 300
 
             local gui = Instance.new("ScreenGui")
             gui.Name = "AimThresholdCircle"
@@ -299,12 +299,11 @@ AimbotSection:Checkbox({
             outline.Color = AimColor
             outline.Parent = circle
 
-            -- Add plus sign in center
             local plusHorizontal = Instance.new("Frame")
             plusHorizontal.Size = UDim2.new(0, 10, 0, 2)
             plusHorizontal.Position = UDim2.new(0.5, 0, 0.5, 0)
             plusHorizontal.AnchorPoint = Vector2.new(0.5, 0.5)
-            plusHorizontal.BackgroundColor3 = Color3.new(1, 1, 1)
+            plusHorizontal.BackgroundColor3 = AimColor
             plusHorizontal.BorderSizePixel = 0
             plusHorizontal.Parent = circle
 
@@ -312,22 +311,22 @@ AimbotSection:Checkbox({
             plusVertical.Size = UDim2.new(0, 2, 0, 10)
             plusVertical.Position = UDim2.new(0.5, 0, 0.5, 0)
             plusVertical.AnchorPoint = Vector2.new(0.5, 0.5)
-            plusVertical.BackgroundColor3 = Color3.new(1, 1, 1)
+            plusVertical.BackgroundColor3 = AimColor
             plusVertical.BorderSizePixel = 0
             plusVertical.Parent = circle
 
             RunService.RenderStepped:Connect(function()
                 circle.Size = UDim2.new(0, AimFOV * 2, 0, AimFOV * 2)
                 outline.Color = AimColor
+                plusHorizontal.BackgroundColor3 = AimColor
+                plusVertical.BackgroundColor3 = AimColor
             end)
 
-            -- Function to check if NPC is alive
             local function isAlive(npc)
                 local humanoid = npc:FindFirstChildOfClass("Humanoid")
                 return humanoid and humanoid.Health > 0
             end
 
-            -- Function to check if head is visible
             local function isHeadVisible(head)
                 local rayParams = RaycastParams.new()
                 rayParams.FilterType = Enum.RaycastFilterType.Blacklist
@@ -342,7 +341,6 @@ AimbotSection:Checkbox({
                 return false
             end
 
-            -- Find closest valid head
             local function getClosestHead()
                 local mousePos = Camera.ViewportSize / 2
                 local closestNPC, closestDist = nil, math.huge
@@ -373,13 +371,21 @@ AimbotSection:Checkbox({
                 return nil
             end
 
-            -- Main loop
             RunService.RenderStepped:Connect(function()
                 local targetHead = getClosestHead()
                 if targetHead then
-                    Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
+                    if AimSpeed == "instant" then
+                        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
+                    else 
+                        local target = CFrame.new(Camera.CFrame.Position, targetHead.Position)
+                        Camera.CFrame = Camera.CFrame:Lerp(target, 0.3)
+                    end
                 end
             end)
+        elseif not Value then
+            if LocalPlayer:FindFirstChild("PlayerGui"):FindFirstChild("AimThresholdCircle") then
+                LocalPlayer:FindFirstChild("PlayerGui"):FindFirstChild("AimThresholdCircle"):Destroy()
+            end
         end
     end
 })
@@ -390,6 +396,19 @@ AimbotSection:SliderInt({
     Maximum = 500,
     Callback = function(self, Value)
         AimFOV = Value
+    end
+})
+AimbotSection:SliderInt({
+    Label = "Speed",
+    Value = 100,
+    Minimum = 1,
+    Maximum = 100,
+    Callback = function(self, Value)
+        if Value < 100 then
+            AimSpeed = Value/100
+        else
+            AimSpeed = "instant"
+        end
     end
 })
 AimbotSection:SliderColor3({
