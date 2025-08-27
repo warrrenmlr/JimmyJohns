@@ -3,7 +3,6 @@
 --===Gui Overhaul (adding full features little by little, having issues with execs rn so might be a bit)===--
 local RunService = game:GetService("RunService")
 local ReGui = loadstring(game:HttpGet('https://raw.githubusercontent.com/depthso/Dear-ReGui/refs/heads/main/ReGui.lua'))()
-local Icons = loadstring(game:HttpGet('https://raw.githubusercontent.com/depthso/Dear-ReGui/refs/heads/main/src/configurations/Icons.lua'))
 ReGui:DefineTheme("Cherry", {
 	TitleAlign = Enum.TextXAlignment.Center,
 	TextDisabled = Color3.fromRGB(120, 100, 120),
