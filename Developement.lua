@@ -1,5 +1,4 @@
---=====This file only really exists for me to transfer code blocks from mac to windows easily. Some beta features might be added here, so feel free to try them out=====--
-
+--Just basically a "Beta" version of the script, used for testing--
 --===Gui Overhaul (adding full features little by little, having issues with execs rn so might be a bit)===--
 local RunService = game:GetService("RunService")
 local ReGui = loadstring(game:HttpGet('https://raw.githubusercontent.com/depthso/Dear-ReGui/refs/heads/main/ReGui.lua'))()
