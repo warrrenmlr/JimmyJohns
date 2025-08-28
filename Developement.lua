@@ -1,4 +1,5 @@
 --Just basically a "Beta" version of the script, used for testing--
+
 --===Gui Overhaul (adding full features little by little, having issues with execs rn so might be a bit)===--
 local RunService = game:GetService("RunService")
 local ReGui = loadstring(game:HttpGet('https://raw.githubusercontent.com/depthso/Dear-ReGui/refs/heads/main/ReGui.lua'))()
@@ -130,6 +131,7 @@ local AimbotSection = CreateRegion(General, "Aimbot")
 local ESPSection = CreateRegion(General, "ESP")
 local AutoSection = CreateRegion(Char, "Auto")
 local CharSection = CreateRegion(Char, "Character")
+local DiscordSection = CreateRegion(Discord, "Discord")
 
 --//Define Variables
 local Lighting = game:GetService("Lighting")
@@ -299,6 +301,7 @@ AimbotSection:SliderColor3({
     end
 
 })
+--//ESP Section
 ESPSection:Checkbox({
     Value = false,
     Label = "ESP",
@@ -365,6 +368,7 @@ ESPSection:Checkbox({
         end
     end
 })
+--//WalkSpeed
 local walkspeed = 16
 local walkspeedToggle = false
 CharSection:Checkbox({
@@ -391,7 +395,7 @@ RunService.RenderStepped:Connect(function()
         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
     end
 end)
-
+--//Gun Mods
 CharSection:Button({
     Text = "m4 inf ammo",
     Callback = function()
@@ -436,257 +440,181 @@ CharSection:Button({
         game:GetService('VirtualInputManager'):SendKeyEvent(false, Enum.KeyCode.One, false, game)
     end
 })
-
-local AutoEvidence
+--// Auto Section
+local Toggles = {
+    AutoEvidence = false,
+    AutoReport   = false,
+    AutoDoor     = false,
+    AutoArrest   = false
+}
+local EvidenceNames = {
+    "Suitcase", "Pile of guns", "Laptop",
+    "Pile of money", "MoneyStack", "GunCarton",
+    "HardDrive", "Radio", "Cargo"
+}
+--functions
+local function isInRange(prompt)
+    local promptPos = prompt.Parent:IsA("Attachment") 
+        and prompt.Parent.WorldPosition 
+        or prompt.Parent.Position
+    return (rootPart.Position - promptPos).Magnitude <= prompt.MaxActivationDistance
+end
+local function collectPrompts(container, filterFunc, promptLocator)
+    local prompts = {}
+    for _, obj in ipairs(container:GetChildren()) do
+        if filterFunc(obj) then
+            local prompt = promptLocator(obj)
+            if prompt then
+                table.insert(prompts, prompt)
+            end
+        end
+    end
+    return prompts
+end
+--specific collections
+local function getEvidencePrompts()
+    local evidenceFolder = workspace.GAME.Suspects.Evidence
+    return collectPrompts(
+        evidenceFolder,
+        function(obj) return table.find(EvidenceNames, obj.Name) and obj:FindFirstChild("EvidenceBag") end,
+        function(evidence)
+            local attachment = evidence.EvidenceBag:FindFirstChild("Attachment")
+            return attachment and attachment:FindFirstChild("ProximityPrompt")
+        end
+    )
+end
+local function getSuspectReportPrompts()
+    local suspects = workspace.GAME.Suspects
+    return collectPrompts(
+        suspects,
+        function(suspect)
+            return table.find({
+                "Suspect_Regular", "Suspect_Heavy",
+                "Suspect_LawranceAccomplice", "Suspect_LawranceFairfax"
+            }, suspect.Name)
+        end,
+        function(suspect)
+            return suspect:FindFirstChild("Torso") and suspect.Torso:FindFirstChild("ProximityPromptReportDead")
+        end
+    )
+end
+local function getDoorPrompts()
+    local doors = workspace.GAME.Doors
+    return collectPrompts(
+        doors,
+        function(door) return door.Name == "DoorV2.5_Wooden" or door.Name == "DoorV2.5_Metal" end,
+        function(door)
+            local components = door:FindFirstChild("Components")
+            return components and components:FindFirstChild("Interactions1") 
+                and components.Interactions1:FindFirstChild("LK1") 
+                and components.Interactions1.LK1:FindFirstChild("ProximityPrompt")
+        end
+    )
+end
+local function getCivilianPrompts()
+    local suspects = workspace.GAME.Suspects
+    local prompts = {}
+    for _, civilian in ipairs(suspects:GetChildren()) do
+        if table.find({
+            "Civilian_LadyFairfax", "Civilian_HostageMMB",
+            "Civilian_Madame", "Civilian_Melinda", "Civilian_Worker"
+        }, civilian.Name) then
+            local parts = { civilian:FindFirstChild("Left Arm"), civilian:FindFirstChild("Head"), civilian:FindFirstChild("Torso") }
+            for _, part in ipairs(parts) do
+                if part then
+                    for _, promptName in ipairs({"ProximityPrompt", "ProximityPromptReport", "ProximityPromptReportDead"}) do
+                        local prompt = part:FindFirstChild(promptName)
+                        if prompt then
+                            table.insert(prompts, prompt)
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return prompts
+end
+--Core loop
+RunService.RenderStepped:Connect(function()
+    if Toggles.AutoEvidence then
+        for _, prompt in ipairs(getEvidencePrompts()) do
+            if isInRange(prompt) then fireproximityprompt(prompt) end
+        end
+    end
+    if Toggles.AutoReport then
+        for _, prompt in ipairs(getSuspectReportPrompts()) do
+            local humanoid = prompt.Parent.Parent:FindFirstChildOfClass("Humanoid")
+            if humanoid and humanoid.Health <= 0 and isInRange(prompt) then
+                fireproximityprompt(prompt)
+            end
+        end
+    end
+    if Toggles.AutoDoor then
+        for _, prompt in ipairs(getDoorPrompts()) do
+            if isInRange(prompt) then fireproximityprompt(prompt) end
+        end
+    end
+    if Toggles.AutoArrest then
+        for _, prompt in ipairs(getCivilianPrompts()) do
+            local suspect = prompt.Parent.Parent
+            local humanoid = suspect:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                if prompt.Name == "ProximityPromptReportDead" and humanoid.Health <= 0 and isInRange(prompt) then
+                    fireproximityprompt(prompt)
+                elseif (prompt.Name == "ProximityPrompt" or prompt.Name == "ProximityPromptReport") 
+                    and humanoid.Health > 0 and isInRange(prompt) then
+                    fireproximityprompt(prompt)
+                end
+            end
+        end
+    end
+end)
+--Checkboxes
 AutoSection:Checkbox({
     Value = false,
     Label = "Auto Collect Evidence",
-    Callback = function(self, Value: boolean)
-        AutoEvidence = Value
-    end
+    Callback = function(_, val) Toggles.AutoEvidence = val end
 })
-local AutoReport
 AutoSection:Checkbox({
     Value = false,
     Label = "Auto Report Suspects",
-    Callback = function(self, Value: boolean)
-        AutoReport = Value
-    end
+    Callback = function(_, val) Toggles.AutoReport = val end
 })
-local AutoDoor
 AutoSection:Checkbox({
     Value = false,
     Label = "Auto Breach Doors",
-    Callback = function(self, Value: boolean)
-        AutoDoor = Value
-    end
+    Callback = function(_, val) Toggles.AutoDoor = val end
 })
-local AutoArrest
 AutoSection:Checkbox({
-    Value = false, 
+    Value = false,
     Label = "Auto Arrest Civilians",
-    Callback = function(self, Value: boolean)
-        AutoArrest = Value
-    end
+    Callback = function(_, val) Toggles.AutoArrest = val end
 })
-local evidenceNames = {
-    "Suitcase",
-    "Pile of guns",
-    "Laptop",
-    "Pile of money",
-    "MoneyStack",
-    "GunCarton",
-    "HardDrive",
-    "Radio",
-    "Radio",
-    "Cargo"
-}
-local prompts = {}
-local function collectPrompts()
-    prompts = {} -- reset each time to reflect current map state
-    local evidenceFolder = workspace.GAME.Suspects.Evidence
-    for _, evidence in ipairs(evidenceFolder:GetChildren()) do
-        if table.find(evidenceNames, evidence.Name) and evidence:FindFirstChild("EvidenceBag") then
-            local attachment = evidence.EvidenceBag:FindFirstChild("Attachment")
-            if attachment then
-                local prompt = attachment:FindFirstChild("ProximityPrompt")
-                if prompt then
-                    table.insert(prompts, prompt)
-                end
-            end
-        end
-    end
-end
-local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local root = character:WaitForChild("HumanoidRootPart")
-local EvidenceConnection
-EvidenceConnection = RunService.RenderStepped:Connect(function()
-    if AutoEvidence then
-        collectPrompts()  -- refresh prompts list every frame or you can call less often if you want
 
-        for i = #prompts, 1, -1 do
-            local prompt = prompts[i]
-            if prompt and prompt.Parent and prompt.Parent:IsA("Attachment") then
-                local promptPosition = prompt.Parent.WorldPosition
-                local distance = (root.Position - promptPosition).Magnitude
-                if distance <= prompt.MaxActivationDistance then
-                    fireproximityprompt(prompt)
-                end
-            else
-                table.remove(prompts, i)
-            end
-        end
+--//Discord Integration
 
-        if #prompts == 0 then
-            EvidenceConnection:Disconnect()
-        end
-    end
-end)
-local function getAllSuspectPrompts()
-    local suspectsFolder = workspace:WaitForChild("GAME"):WaitForChild("Suspects")
-    local prompts = {}
-
-    for _, suspect in ipairs(suspectsFolder:GetChildren()) do
-        if suspect.Name == "Suspect_Regular" or suspect.Name == "Suspect_Heavy" 
-        or suspect.Name == "Suspect_LawranceAccomplice" or suspect.Name == "Suspect_LawranceFairfax" then
-            local torso = suspect:FindFirstChild("Torso")
-            if torso then
-                local prompt = torso:FindFirstChild("ProximityPromptReportDead")
-                if prompt then
-                    table.insert(prompts, prompt)
-                end
-            end
-        end
-    end
-    return prompts
-end
-RunService.RenderStepped:Connect(function()
-    if AutoReport then
-        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local root = character:FindFirstChild("HumanoidRootPart")
-        if not root then return end
-
-        local prompts2 = getAllSuspectPrompts() -- refresh every frame
-
-        for i = #prompts2, 1, -1 do
-            local prompt = prompts2[i]
-            if prompt and prompt.Parent and prompt.Parent:IsA("BasePart") then
-                local suspectModel = prompt.Parent.Parent
-                local humanoid = suspectModel and suspectModel:FindFirstChildOfClass("Humanoid")
-                
-                if humanoid and humanoid.Health <= 0 then
-                    local promptPosition = prompt.Parent.Position
-                    local distance = (root.Position - promptPosition).Magnitude
-                    if distance <= prompt.MaxActivationDistance then
-                        fireproximityprompt(prompt)
-                    end
-                end
-            end
-        end
-    end
-end)
-local function getAllDoorPrompts()
-    local doorsFolder = workspace:WaitForChild("GAME"):WaitForChild("Doors")
-    local prompts = {}
-
-    for _, door in ipairs(doorsFolder:GetChildren()) do
-        -- Check for expected name or just include all, adjust if needed
-        if door.Name == "DoorV2.5_Wooden" or door.Name == "DoorV2.5_Metal" then
-            local lk1 = door:FindFirstChild("Components") 
-                          and door.Components:FindFirstChild("Interactions1") 
-                          and door.Components.Interactions1:FindFirstChild("LK1")
-            if lk1 then
-                local prompt = lk1:FindFirstChild("ProximityPrompt")
-                if prompt then
-                    table.insert(prompts, prompt)
-                end
-            end
-        end
-    end
-
-    return prompts
-end
-local prompts3 = getAllDoorPrompts()
-local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local root = character:WaitForChild("HumanoidRootPart")
-local DoorConnection
-DoorConnection = RunService.RenderStepped:Connect(function()
-    if AutoDoor then
-        for i = #prompts3, 1, -1 do
-            local prompt = prompts3[i]
-            if prompt and prompt.Parent and prompt.Parent:IsA("Attachment") then
-                local promptPosition = prompt.Parent.WorldPosition
-                local distance = (root.Position - promptPosition).Magnitude
-                if distance <= prompt.MaxActivationDistance then
-                    fireproximityprompt(prompt)
-                    table.remove(prompts3, i)
-                end
-            else
-                table.remove(prompts3, i)
-            end
-        end
-
-        if #prompts3 == 0 then
-            DoorConnection:Disconnect()
-        end
-    end
-end)
-local function getAllPrompts()
-    local prompts = {}
-
-    for _, suspect in ipairs(suspectsFolder:GetChildren()) do
-        if suspect.Name == "Civilian_LadyFairfax" or suspect.Name == "Civilian_HostageMMB" or suspect.Name == "Civilian_Madame" or suspect.Name == "Civilian_Melinda" or suspect.Name == "Civilian_Worker" then
-            local leftArm = suspect:FindFirstChild("Left Arm")
-            if leftArm then
-                local attachment = leftArm:FindFirstChild("Attachment")
-                if attachment then
-                    local prompt = attachment:FindFirstChild("ProximityPrompt")
-                    if prompt then
-                        table.insert(prompts, prompt)
-                    end
-                end
-            end
-
-            -- Attempt to get "Head" prompt
-            local head = suspect:FindFirstChild("Head")
-            if head then
-                local prompt = head:FindFirstChild("ProximityPromptReport")
-                if prompt then
-                    table.insert(prompts, prompt)
-                end
-            end
-            local torso = suspect:FindFirstChild("Torso")
-            if torso then
-                local prompt = torso:FindFirstChild("ProximityPromptReportDead")
-                if prompt then
-                    table.insert(prompts, prompt)
-                end
-            end
-        end
-    end
-    return prompts
-end
-local ArrestConnection
-ArrestConnection = RunService.RenderStepped:Connect(function()
-    if AutoArrest then
-        local prompts2 = getAllPrompts()
-
-        for i = #prompts2, 1, -1 do
-            local prompt = prompts2[i]
-            if prompt and prompt.Parent and (prompt.Parent:IsA("BasePart") or prompt.Parent:IsA("Attachment")) then
-                local suspectModel = prompt.Parent.Parent
-                local humanoid = suspectModel and suspectModel:FindFirstChildOfClass("Humanoid")
-                local isAlive = humanoid and humanoid.Health > 0
-                local isDead = humanoid and humanoid.Health <= 0
-
-                local promptName = prompt.Name
-
-                local shouldFire = false
-                if promptName == "ProximityPromptReportDead" then
-                    -- Only fire if dead
-                    shouldFire = isDead
-                elseif promptName == "ProximityPrompt" or promptName == "ProximityPromptReport" then
-                    -- Only fire if alive
-                    shouldFire = isAlive
-                end
-
-                if shouldFire then
-                    local promptPosition = (prompt.Parent:IsA("Attachment") and prompt.Parent.WorldPosition) or prompt.Parent.Position
-                    local distance = (root.Position - promptPosition).Magnitude
-                    if distance <= prompt.MaxActivationDistance then
-                        fireproximityprompt(prompt)
-                        table.remove(prompts2, i)
-                    end
-                else
-                    table.remove(prompts2, i)
-                end
-            else
-                table.remove(prompts2, i)
-            end
-        end
-
-        if #prompts2 == 0 then
-            ArrestConnection:Disconnect()
-        end
-    end
-end)
+DiscordSection:Label({
+    Text = "Join the Discord for updates, support, and to suggest features!",
+    TextWrapped = true
+})
+DiscordSection:Button({
+    Text = "Copy Discord Invite",
+    Callback = function()
+        local textToCopy = "discord.gg/NVsvWfxv3K"
+        setclipboard(textToCopy)
+        local DiscordPopup = Discord:PopupModal({
+            Title = "Join the Discord!",
+            AutoSize = "Y"
+        })
+        DiscordPopup:Label({
+            Text = [[Invite Copied to Clipboard!]],
+            TextWrapped = true
+        })
+        DiscordPopup:Button({
+            Text = "Okay",
+            Callback = function()
+                DiscordPopup:ClosePopup()
+            end,
+        })
+    end,
+})
