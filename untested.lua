@@ -1,6 +1,6 @@
 --=====This file only really exists for me to transfer code blocks from mac to windows easily. Some beta features might be added here, so feel free to try them out=====--
 
---===Disable features for ESP/Fullbright/Aimbot===--
+--===adding disabling features for ESP/Fullbright/Aimbot, added FOV changer for Playercam===--
 local RunService = game:GetService("RunService")
 local ReGui = loadstring(game:HttpGet('https://raw.githubusercontent.com/depthso/Dear-ReGui/refs/heads/main/ReGui.lua'))()
 ReGui:DefineTheme("Cherry", {
@@ -127,7 +127,7 @@ local Discord = CreateTab("Discord", "rbxassetid://84828491431270")
 
 --// General Tab
 local AimbotSection = CreateRegion(General, "Aimbot")
-local ESPSection = CreateRegion(General, "ESP")
+local VisSection = CreateRegion(General, "Visual")
 local AutoSection = CreateRegion(Char, "Auto")
 local CharSection = CreateRegion(Char, "Character")
 local DiscordSection = CreateRegion(Discord, "Discord")
@@ -301,7 +301,7 @@ AimbotSection:SliderColor3({
 
 })
 --//ESP Section
-ESPSection:Checkbox({
+VisSection:Checkbox({
     Value = false,
     Label = "ESP",
     Callback = function(self, Value: boolean)
@@ -354,7 +354,7 @@ ESPSection:Checkbox({
         end
     end
 })
-ESPSection:Checkbox({
+VisSection:Checkbox({
     Value = false,
     Label = "Fullbright",
     Callback = function(self, Value: boolean)
@@ -386,6 +386,16 @@ ESPSection:Checkbox({
             Lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
         end
     end
+})
+VisSection:SliderInt({
+    Label = "FOV",
+    Value = 70,
+    Minimum = 70,
+    Maximum = 120,
+    Callback = function(self, Value)
+        Camera.FieldOfView = Value
+    end 
+
 })
 --//WalkSpeed
 local walkspeed = 16
@@ -637,3 +647,4 @@ DiscordSection:Button({
         })
     end,
 })
+
