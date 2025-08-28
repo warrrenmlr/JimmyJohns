@@ -1,6 +1,6 @@
 --=====This file only really exists for me to transfer code blocks from mac to windows easily. Some beta features might be added here, so feel free to try them out=====--
 
---===adding disabling features for ESP/Fullbright/Aimbot, added FOV changer for Playercam===--
+--===adding disabling features for ESP/Fullbright/Aimbot, added FOV changer for Playercam, added Gui Togglability===--
 local RunService = game:GetService("RunService")
 local ReGui = loadstring(game:HttpGet('https://raw.githubusercontent.com/depthso/Dear-ReGui/refs/heads/main/ReGui.lua'))()
 ReGui:DefineTheme("Cherry", {
@@ -123,6 +123,7 @@ end
 
 local General = CreateTab("General", 139650104834071)
 local Char = CreateTab("Character", "rbxassetid://18854794412")
+local Settings = CreateTab("Settings", "rbxassetid://4483345998")
 local Discord = CreateTab("Discord", "rbxassetid://84828491431270")
 
 --// General Tab
@@ -131,6 +132,7 @@ local VisSection = CreateRegion(General, "Visual")
 local AutoSection = CreateRegion(Char, "Auto")
 local CharSection = CreateRegion(Char, "Character")
 local DiscordSection = CreateRegion(Discord, "Discord")
+local SettingsSection = CreateRegion(Settings, "Settings")
 
 --//Define Variables
 local Lighting = game:GetService("Lighting")
@@ -147,6 +149,16 @@ local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Camera = Workspace.CurrentCamera
 local humanoid = character:WaitForChild("Humanoid")
 local rootPart = character:WaitForChild("HumanoidRootPart")
+
+local GuiToggleKey = Enum.KeyCode.Q
+local guiVisible = true
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    if input.KeyCode == GuiToggleKey then
+        guiVisible = not guiVisible
+        Window.Visible = guiVisible
+    end
+end)
 
 --//Aimbot Section
 local AimFOV = 125
@@ -647,4 +659,17 @@ DiscordSection:Button({
         })
     end,
 })
-
+--//Settings
+SettingsSection:Button({
+    Text = "Unload Script",
+    Callback = function()
+        ReGui:Unload()
+    end
+})
+SettingsSection:Keybind({
+    Label = "Toggle Gui Keybind",
+    Value = Enum.KeyCode.Q,
+    OnKeybindSet = function(self, KeyID)
+        GuiToggleKey = KeyID
+    end
+})
