@@ -1,6 +1,9 @@
 --Just basically a "Beta" version of the script, used for testing--
 
---===Gui Overhaul (adding full features little by little, having issues with execs rn so might be a bit)===--
+--===Most recent updates===--
+--=====This file only really exists for me to transfer code blocks from mac to windows easily. Some beta features might be added here, so feel free to try them out=====--
+
+--===adding disabling features for ESP/Fullbright/Aimbot, added FOV changer for Playercam, added Gui Togglability===--
 local RunService = game:GetService("RunService")
 local ReGui = loadstring(game:HttpGet('https://raw.githubusercontent.com/depthso/Dear-ReGui/refs/heads/main/ReGui.lua'))()
 ReGui:DefineTheme("Cherry", {
@@ -123,15 +126,16 @@ end
 
 local General = CreateTab("General", 139650104834071)
 local Char = CreateTab("Character", "rbxassetid://18854794412")
+local Settings = CreateTab("Settings", "rbxassetid://4483345998")
 local Discord = CreateTab("Discord", "rbxassetid://84828491431270")
-
 
 --// General Tab
 local AimbotSection = CreateRegion(General, "Aimbot")
-local ESPSection = CreateRegion(General, "ESP")
+local VisSection = CreateRegion(General, "Visual")
 local AutoSection = CreateRegion(Char, "Auto")
 local CharSection = CreateRegion(Char, "Character")
 local DiscordSection = CreateRegion(Discord, "Discord")
+local SettingsSection = CreateRegion(Settings, "Settings")
 
 --//Define Variables
 local Lighting = game:GetService("Lighting")
@@ -148,6 +152,17 @@ local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Camera = Workspace.CurrentCamera
 local humanoid = character:WaitForChild("Humanoid")
 local rootPart = character:WaitForChild("HumanoidRootPart")
+
+local GuiToggleKey = Enum.KeyCode.Quote
+local guiVisible = true
+local GuiRoot = Window.Parent
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    if input.KeyCode == GuiToggleKey then
+        guiVisible = not guiVisible
+        GuiRoot.Enabled = guiVisible
+    end
+end)
 
 --//Aimbot Section
 local AimFOV = 125
@@ -302,7 +317,7 @@ AimbotSection:SliderColor3({
 
 })
 --//ESP Section
-ESPSection:Checkbox({
+VisSection:Checkbox({
     Value = false,
     Label = "ESP",
     Callback = function(self, Value: boolean)
@@ -339,10 +354,23 @@ ESPSection:Checkbox({
                     end
                 end
             end
+        else 
+            for _, npc in ipairs(suspectsFolder:GetChildren()) do
+                if npc:FindFirstChildOfClass("Highlight") then
+                    npc:FindFirstChildOfClass("Highlight"):Destroy()
+                end
+            end
+            if evidenceFolder then
+                for _, evidence in ipairs(evidenceFolder:GetChildren()) do
+                    if evidence:FindFirstChildOfClass("Highlight") then
+                        evidence:FindFirstChildOfClass("Highlight"):Destroy()
+                    end
+                end
+            end
         end
     end
 })
-ESPSection:Checkbox({
+VisSection:Checkbox({
     Value = false,
     Label = "Fullbright",
     Callback = function(self, Value: boolean)
@@ -365,7 +393,45 @@ ESPSection:Checkbox({
                 Lighting.Ambient = Color3.fromRGB(255, 255, 255)
                 Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
             end)
+        else 
+            Lighting.Brightness = 1
+            Lighting.GlobalShadows = true
+            Lighting.ClockTime = 14
+            Lighting.FogEnd = 100000
+            Lighting.Ambient = Color3.fromRGB(127, 127, 127)
+            Lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
         end
+    end
+})
+VisSection:SliderInt({
+    Label = "FOV",
+    Value = 70,
+    Minimum = 70,
+    Maximum = 120,
+    Callback = function(self, Value)
+        Camera.FieldOfView = Value
+    end 
+
+})
+VisSection:Checkbox({
+    Label = "Disable Vignette",
+    Value = false,
+    Callback = function(self, Value)
+        game:GetService("Players").LocalPlayer.PlayerGui.Bodycam.Vignette.Visible = not Value
+    end
+})
+VisSection:Checkbox({
+    Label = "Disable Static",
+    Value = false,
+    Callback = function(self, Value)
+        game:GetService("Players").LocalPlayer.PlayerGui.Bodycam.Static.Visible = not Value
+    end
+})
+VisSection:Checkbox({
+    Label = "Disable Bodycam Gui",
+    Value = false,
+    Callback = function(self, Value)
+        game:GetService("Players").LocalPlayer.PlayerGui.Bodycam.Enabled = not Value
     end
 })
 --//WalkSpeed
@@ -392,7 +458,7 @@ RunService.RenderStepped:Connect(function()
     if walkspeedToggle then
         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = walkspeed
     else
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 10
     end
 end)
 --//Gun Mods
@@ -617,4 +683,18 @@ DiscordSection:Button({
             end,
         })
     end,
+})
+--//Settings
+SettingsSection:Button({
+    Text = "Unload Script",
+    Callback = function()
+        ReGui:Unload()
+    end
+})
+SettingsSection:Keybind({
+    Label = "Toggle Gui Keybind",
+    Value = Enum.KeyCode.Quote,
+    OnKeybindSet = function(self, KeyID)
+        GuiToggleKey = KeyID
+    end
 })
