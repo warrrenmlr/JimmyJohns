@@ -1,3 +1,6 @@
+--=====This file only really exists for me to transfer code blocks from mac to windows easily. Some beta features might be added here, so feel free to try them out=====--
+
+--===adding disabling features for ESP/Fullbright/Aimbot, added FOV changer for Playercam, added Gui Togglability===--
 local RunService = game:GetService("RunService")
 local ReGui = loadstring(game:HttpGet('https://raw.githubusercontent.com/depthso/Dear-ReGui/refs/heads/main/ReGui.lua'))()
 ReGui:DefineTheme("Cherry", {
@@ -406,6 +409,27 @@ VisSection:SliderInt({
         Camera.FieldOfView = Value
     end 
 
+})
+VisSection:Checkbox({
+    Label = "Disable Vignette",
+    Value = false,
+    Callback = function(self, Value)
+        game:GetService("Players").LocalPlayer.PlayerGui.Bodycam.Vignette.Visible = not Value
+    end
+})
+VisSection:Checkbox({
+    Label = "Disable Static",
+    Value = false,
+    Callback = function(self, Value)
+        game:GetService("Players").LocalPlayer.PlayerGui.Bodycam.Static.Visible = not Value
+    end
+})
+VisSection:Checkbox({
+    Label = "Disable Bodycam Gui",
+    Value = false,
+    Callback = function(self, Value)
+        game:GetService("Players").LocalPlayer.PlayerGui.Bodycam.Enabled = not Value
+    end
 })
 --//WalkSpeed
 local walkspeed = 16
