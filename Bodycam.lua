@@ -1,16 +1,137 @@
+local RunService = game:GetService("RunService")
 local ReGui = loadstring(game:HttpGet('https://raw.githubusercontent.com/depthso/Dear-ReGui/refs/heads/main/ReGui.lua'))()
-local Window = ReGui:TabsWindow({
-    Title = "Cats are pretty cool icl",
-    Size = UDim2.fromOffset(300, 250)
+ReGui:DefineTheme("Cherry", {
+	TitleAlign = Enum.TextXAlignment.Center,
+	TextDisabled = Color3.fromRGB(120, 100, 120),
+	Text = Color3.fromRGB(200, 180, 200),
+	
+	FrameBg = Color3.fromRGB(25, 20, 25),
+	FrameBgTransparency = 0.4,
+	FrameBgActive = Color3.fromRGB(120, 100, 120),
+	FrameBgTransparencyActive = 0.4,
+	
+	CheckMark = Color3.fromRGB(150, 100, 150),
+	SliderGrab = Color3.fromRGB(150, 100, 150),
+	ButtonsBg = Color3.fromRGB(150, 100, 150),
+	CollapsingHeaderBg = Color3.fromRGB(150, 100, 150),
+	CollapsingHeaderText = Color3.fromRGB(200, 180, 200),
+	RadioButtonHoveredBg = Color3.fromRGB(150, 100, 150),
+	
+	WindowBg = Color3.fromRGB(35, 30, 35),
+	TitleBarBg = Color3.fromRGB(35, 30, 35),
+	TitleBarBgActive = Color3.fromRGB(50, 45, 50),
+	
+	Border = Color3.fromRGB(50, 45, 50),
+	ResizeGrab = Color3.fromRGB(50, 45, 50),
+	RegionBgTransparency = 1,
 })
+--// Tabs
+local Window = ReGui:Window({
+	Title = "Cherry",
+	Theme = "Cherry",
+	NoClose = true,
+	Size = UDim2.new(0, 600, 0, 400),
+}):Center()
+local ModalWindow = Window:PopupModal({
+	Title = "I REAAAALLLY like cats",
+	AutoSize = "Y"
+})
+ModalWindow:Label({
+	Text = [[Hey! This script is slowly developing, but we need more testers! If you are at all interested in getting early versions of this script, please join the discord linked below!]],
+	TextWrapped = true
+})
+ModalWindow:Separator()
+ModalWindow:Button({
+    Text = "Discord",
+    Callback = function()
+        local textToCopy = "discord.gg/NVsvWfxv3K"
+        setclipboard(textToCopy)
+    end
+})
+ModalWindow:Button({
+	Text = "Okay",
+	Callback = function()
+		ModalWindow:ClosePopup()
+	end,
+})
+local Group = Window:List({
+	UiPadding = 2,
+	HorizontalFlex = Enum.UIFlexAlignment.Fill,
+})
+local TabsBar = Group:List({
+	Border = true,
+	UiPadding = 5,
+	BorderColor = Window:GetThemeKey("Border"),
+	BorderThickness = 1,
+	HorizontalFlex = Enum.UIFlexAlignment.Fill,
+	HorizontalAlignment = Enum.HorizontalAlignment.Center,
+	AutomaticSize = Enum.AutomaticSize.None,
+	FlexMode = Enum.UIFlexMode.None,
+	Size = UDim2.new(0, 40, 1, 0),
+	CornerRadius = UDim.new(0, 5)
+})
+local TabSelector = Group:TabSelector({
+	NoTabsBar = true,
+	Size = UDim2.fromScale(0.5, 1)
+})
+local function CreateTab(Name: string, Icon)
+	local Tab = TabSelector:CreateTab({
+		Name = Name
+	})
 
-local tabs = {}
-local Names = {"Main", "Char", "Auto", "Gun Mods", "Extras"}
+	local List = Tab:List({
+		HorizontalFlex = Enum.UIFlexAlignment.Fill,
+		UiPadding = 1,
+		Spacing = 10
+	})
 
-for _, Name in next, Names do
-    tabs[Name] = Window:CreateTab({ Name = Name })
+	local Button = TabsBar:Image({
+		Image = Icon,
+		Ratio = 1,
+		RatioAxis = Enum.DominantAxis.Width,
+		Size = UDim2.fromScale(1, 1),
+		Callback = function(self)
+			TabSelector:SetActiveTab(Tab)
+		end,
+	})
+
+	ReGui:SetItemTooltip(Button, function(Canvas)
+		Canvas:Label({
+			Text = Name
+		})
+	end)
+
+	return List
+end
+local function CreateRegion(Parent, Title)
+	local Region = Parent:Region({
+		Border = true,
+		BorderColor = Window:GetThemeKey("Border"),
+		BorderThickness = 1,
+		CornerRadius = UDim.new(0, 5)
+	})
+
+	Region:Label({
+		Text = Title
+	})
+
+	return Region
 end
 
+local General = CreateTab("General", 139650104834071)
+local Char = CreateTab("Character", "rbxassetid://18854794412")
+local Settings = CreateTab("Settings", "rbxassetid://4483345998")
+local Discord = CreateTab("Discord", "rbxassetid://84828491431270")
+
+--// General Tab
+local AimbotSection = CreateRegion(General, "Aimbot")
+local VisSection = CreateRegion(General, "Visual")
+local AutoSection = CreateRegion(Char, "Auto")
+local CharSection = CreateRegion(Char, "Character")
+local DiscordSection = CreateRegion(Discord, "Discord")
+local SettingsSection = CreateRegion(Settings, "Settings")
+
+--//Define Variables
 local Lighting = game:GetService("Lighting")
 local suspectsFolder = workspace.GAME:FindFirstChild("Suspects")
 local evidenceFolder = workspace.GAME.Suspects:FindFirstChild("Evidence")
@@ -19,7 +140,6 @@ local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local StarterGui = game:GetService("StarterGui")
 local UserInputService = game:GetService("UserInputService")
-
 local LocalPlayer = Players.LocalPlayer
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -27,13 +147,27 @@ local Camera = Workspace.CurrentCamera
 local humanoid = character:WaitForChild("Humanoid")
 local rootPart = character:WaitForChild("HumanoidRootPart")
 
+local GuiToggleKey = Enum.KeyCode.Quote
+local guiVisible = true
+local GuiRoot = Window.Parent
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    if input.KeyCode == GuiToggleKey then
+        guiVisible = not guiVisible
+        GuiRoot.Enabled = guiVisible
+    end
+end)
+
+--//Aimbot Section
 local AimFOV = 125
-tabs["Main"]:Checkbox({
+local AimColor = Color3.fromRGB(255,255,255)
+local AimSpeed = "instant"
+AimbotSection:Checkbox({
     Value = false,
-    Label = "Aimbot",
+    Label = "Enabled",
     Callback = function(self, Value: boolean)
         if Value then
-            local LOCK_DISTANCE = 300 -- studs
+            local LOCK_DISTANCE = 300
 
             local gui = Instance.new("ScreenGui")
             gui.Name = "AimThresholdCircle"
@@ -53,15 +187,14 @@ tabs["Main"]:Checkbox({
 
             local outline = Instance.new("UIStroke")
             outline.Thickness = 1
-            outline.Color = Color3.fromRGB(255, 255, 255)
+            outline.Color = AimColor
             outline.Parent = circle
 
-            -- Add plus sign in center
             local plusHorizontal = Instance.new("Frame")
             plusHorizontal.Size = UDim2.new(0, 10, 0, 2)
             plusHorizontal.Position = UDim2.new(0.5, 0, 0.5, 0)
             plusHorizontal.AnchorPoint = Vector2.new(0.5, 0.5)
-            plusHorizontal.BackgroundColor3 = Color3.new(1, 1, 1)
+            plusHorizontal.BackgroundColor3 = AimColor
             plusHorizontal.BorderSizePixel = 0
             plusHorizontal.Parent = circle
 
@@ -69,21 +202,22 @@ tabs["Main"]:Checkbox({
             plusVertical.Size = UDim2.new(0, 2, 0, 10)
             plusVertical.Position = UDim2.new(0.5, 0, 0.5, 0)
             plusVertical.AnchorPoint = Vector2.new(0.5, 0.5)
-            plusVertical.BackgroundColor3 = Color3.new(1, 1, 1)
+            plusVertical.BackgroundColor3 = AimColor
             plusVertical.BorderSizePixel = 0
             plusVertical.Parent = circle
 
             RunService.RenderStepped:Connect(function()
                 circle.Size = UDim2.new(0, AimFOV * 2, 0, AimFOV * 2)
+                outline.Color = AimColor
+                plusHorizontal.BackgroundColor3 = AimColor
+                plusVertical.BackgroundColor3 = AimColor
             end)
 
-            -- Function to check if NPC is alive
             local function isAlive(npc)
                 local humanoid = npc:FindFirstChildOfClass("Humanoid")
                 return humanoid and humanoid.Health > 0
             end
 
-            -- Function to check if head is visible
             local function isHeadVisible(head)
                 local rayParams = RaycastParams.new()
                 rayParams.FilterType = Enum.RaycastFilterType.Blacklist
@@ -98,7 +232,6 @@ tabs["Main"]:Checkbox({
                 return false
             end
 
-            -- Find closest valid head
             local function getClosestHead()
                 local mousePos = Camera.ViewportSize / 2
                 local closestNPC, closestDist = nil, math.huge
@@ -129,17 +262,25 @@ tabs["Main"]:Checkbox({
                 return nil
             end
 
-            -- Main loop
             RunService.RenderStepped:Connect(function()
                 local targetHead = getClosestHead()
                 if targetHead then
-                    Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
+                    if AimSpeed == "instant" then
+                        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
+                    else 
+                        local target = CFrame.new(Camera.CFrame.Position, targetHead.Position)
+                        Camera.CFrame = Camera.CFrame:Lerp(target, AimSpeed)
+                    end
                 end
             end)
+        elseif not Value then
+            if LocalPlayer:FindFirstChild("PlayerGui"):FindFirstChild("AimThresholdCircle") then
+                LocalPlayer:FindFirstChild("PlayerGui"):FindFirstChild("AimThresholdCircle"):Destroy()
+            end
         end
     end
 })
-tabs["Main"]:SliderInt({
+AimbotSection:SliderInt({
     Label = "FOV",
     Value = 125,
     Minimum = 50,
@@ -148,7 +289,29 @@ tabs["Main"]:SliderInt({
         AimFOV = Value
     end
 })
-tabs["Main"]:Checkbox({
+AimbotSection:SliderInt({
+    Label = "Speed",
+    Value = 100,
+    Minimum = 1,
+    Maximum = 100,
+    Callback = function(self, Value)
+        if Value < 100 then
+            AimSpeed = Value/1000
+        else
+            AimSpeed = "instant"
+        end
+    end
+})
+AimbotSection:SliderColor3({
+    Value = Color3.fromRGB(255,255,255),
+    Label = "Color",
+    Callback = function(self, Value: Color3)
+        AimColor = Value
+    end
+
+})
+--//ESP Section
+VisSection:Checkbox({
     Value = false,
     Label = "ESP",
     Callback = function(self, Value: boolean)
@@ -185,10 +348,23 @@ tabs["Main"]:Checkbox({
                     end
                 end
             end
+        else 
+            for _, npc in ipairs(suspectsFolder:GetChildren()) do
+                if npc:FindFirstChildOfClass("Highlight") then
+                    npc:FindFirstChildOfClass("Highlight"):Destroy()
+                end
+            end
+            if evidenceFolder then
+                for _, evidence in ipairs(evidenceFolder:GetChildren()) do
+                    if evidence:FindFirstChildOfClass("Highlight") then
+                        evidence:FindFirstChildOfClass("Highlight"):Destroy()
+                    end
+                end
+            end
         end
     end
 })
-tabs["Main"]:Checkbox({
+VisSection:Checkbox({
     Value = false,
     Label = "Fullbright",
     Callback = function(self, Value: boolean)
@@ -211,35 +387,37 @@ tabs["Main"]:Checkbox({
                 Lighting.Ambient = Color3.fromRGB(255, 255, 255)
                 Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
             end)
+        else 
+            Lighting.Brightness = 1
+            Lighting.GlobalShadows = true
+            Lighting.ClockTime = 14
+            Lighting.FogEnd = 100000
+            Lighting.Ambient = Color3.fromRGB(127, 127, 127)
+            Lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
         end
     end
 })
-tabs["Main"]:Checkbox({
-    Value = false,
-    Label = "Enable Jumping",
-    Callback = function(self, Value: boolean)
-        if Value then
-            local JUMP_FORCE = 50 -- Adjust this to make jump higher/lower
+VisSection:SliderInt({
+    Label = "FOV",
+    Value = 70,
+    Minimum = 70,
+    Maximum = 120,
+    Callback = function(self, Value)
+        Camera.FieldOfView = Value
+    end 
 
-            UserInputService.InputBegan:Connect(function(input, gameProcessed)
-                if not gameProcessed and input.KeyCode == Enum.KeyCode.Space then
-                    -- Force upward movement even if jump is disabled
-                    rootPart.Velocity = Vector3.new(rootPart.Velocity.X, JUMP_FORCE, rootPart.Velocity.Z)
-                end
-            end)
-        end
-    end
 })
+--//WalkSpeed
 local walkspeed = 16
 local walkspeedToggle = false
-tabs["Char"]:Checkbox({
+CharSection:Checkbox({
     Value = false,
     Label = "Walkspeed Toggle",
     Callback = function(self, Value)
         walkspeedToggle = Value
     end
 })
-tabs["Char"]:SliderInt({
+CharSection:SliderInt({
     Label = "Walkspeed Set",
     Value = 16,
     Minimum = 1,
@@ -253,15 +431,16 @@ RunService.RenderStepped:Connect(function()
     if walkspeedToggle then
         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = walkspeed
     else
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 10
     end
 end)
-tabs["Gun Mods"]:Button({
+--//Gun Mods
+CharSection:Button({
     Text = "m4 inf ammo",
     Callback = function()
         game:GetService('VirtualInputManager'):SendKeyEvent(true, Enum.KeyCode.Two, false, game)
         game:GetService('VirtualInputManager'):SendKeyEvent(false, Enum.KeyCode.Two, false, game)
-        wait(1)
+        wait(0.4)
         local gunSettingsModule = LocalPlayer.Backpack["M4 Carbine "]:FindFirstChild("ACS_Settings")
 
         if gunSettingsModule and gunSettingsModule:IsA("ModuleScript") then
@@ -295,315 +474,202 @@ tabs["Gun Mods"]:Button({
             ACS_Settings.MaxRecoilPower = 0
             ACS_Settings.RecoilPowerStepAmount = 0
         end
-        wait(1)
+        wait(0.1)
         game:GetService('VirtualInputManager'):SendKeyEvent(true, Enum.KeyCode.One, false, game)
         game:GetService('VirtualInputManager'):SendKeyEvent(false, Enum.KeyCode.One, false, game)
     end
 })
-tabs["Extras"]:Button({
-    Text = "Infinite Yeild",
-    Callback = function()
-        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
-    end
-})
-local function showMessage(msg)
-    -- Create ScreenGui
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "TempMessage"
-    screenGui.ResetOnSpawn = false
-    screenGui.Parent = playerGui
-
-    -- Create TextLabel
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0, 300, 0, 50)
-    label.Position = UDim2.new(0.5, 0, 0.5, 0)
-    label.AnchorPoint = Vector2.new(0.5, 0.5)
-    label.BackgroundTransparency = 1
-    label.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.TextScaled = true
-    label.Font = Enum.Font.SourceSansBold
-    label.Text = msg
-    label.Parent = screenGui
-
-    -- Remove after 1 second
-    task.delay(3, function()
-        if screenGui and screenGui.Parent then
-            screenGui:Destroy()
-        end
-    end)
+--// Auto Section
+local Toggles = {
+    AutoEvidence = false,
+    AutoReport   = false,
+    AutoDoor     = false,
+    AutoArrest   = false
+}
+local EvidenceNames = {
+    "Suitcase", "Pile of guns", "Laptop",
+    "Pile of money", "MoneyStack", "GunCarton",
+    "HardDrive", "Radio", "Cargo"
+}
+--functions
+local function isInRange(prompt)
+    local promptPos = prompt.Parent:IsA("Attachment") 
+        and prompt.Parent.WorldPosition 
+        or prompt.Parent.Position
+    return (rootPart.Position - promptPos).Magnitude <= prompt.MaxActivationDistance
 end
-tabs["Extras"]:Button({
-    Text = "Discord",
+local function collectPrompts(container, filterFunc, promptLocator)
+    local prompts = {}
+    for _, obj in ipairs(container:GetChildren()) do
+        if filterFunc(obj) then
+            local prompt = promptLocator(obj)
+            if prompt then
+                table.insert(prompts, prompt)
+            end
+        end
+    end
+    return prompts
+end
+--specific collections
+local function getEvidencePrompts()
+    local evidenceFolder = workspace.GAME.Suspects.Evidence
+    return collectPrompts(
+        evidenceFolder,
+        function(obj) return table.find(EvidenceNames, obj.Name) and obj:FindFirstChild("EvidenceBag") end,
+        function(evidence)
+            local attachment = evidence.EvidenceBag:FindFirstChild("Attachment")
+            return attachment and attachment:FindFirstChild("ProximityPrompt")
+        end
+    )
+end
+local function getSuspectReportPrompts()
+    local suspects = workspace.GAME.Suspects
+    return collectPrompts(
+        suspects,
+        function(suspect)
+            return table.find({
+                "Suspect_Regular", "Suspect_Heavy",
+                "Suspect_LawranceAccomplice", "Suspect_LawranceFairfax"
+            }, suspect.Name)
+        end,
+        function(suspect)
+            return suspect:FindFirstChild("Torso") and suspect.Torso:FindFirstChild("ProximityPromptReportDead")
+        end
+    )
+end
+local function getDoorPrompts()
+    local doors = workspace.GAME.Doors
+    return collectPrompts(
+        doors,
+        function(door) return door.Name == "DoorV2.5_Wooden" or door.Name == "DoorV2.5_Metal" end,
+        function(door)
+            local components = door:FindFirstChild("Components")
+            return components and components:FindFirstChild("Interactions1") 
+                and components.Interactions1:FindFirstChild("LK1") 
+                and components.Interactions1.LK1:FindFirstChild("ProximityPrompt")
+        end
+    )
+end
+local function getCivilianPrompts()
+    local suspects = workspace.GAME.Suspects
+    local prompts = {}
+    for _, civilian in ipairs(suspects:GetChildren()) do
+        if table.find({
+            "Civilian_LadyFairfax", "Civilian_HostageMMB",
+            "Civilian_Madame", "Civilian_Melinda", "Civilian_Worker"
+        }, civilian.Name) then
+            local parts = { civilian:FindFirstChild("Left Arm"), civilian:FindFirstChild("Head"), civilian:FindFirstChild("Torso") }
+            for _, part in ipairs(parts) do
+                if part then
+                    for _, promptName in ipairs({"ProximityPrompt", "ProximityPromptReport", "ProximityPromptReportDead"}) do
+                        local prompt = part:FindFirstChild(promptName)
+                        if prompt then
+                            table.insert(prompts, prompt)
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return prompts
+end
+--Core loop
+RunService.RenderStepped:Connect(function()
+    if Toggles.AutoEvidence then
+        for _, prompt in ipairs(getEvidencePrompts()) do
+            if isInRange(prompt) then fireproximityprompt(prompt) end
+        end
+    end
+    if Toggles.AutoReport then
+        for _, prompt in ipairs(getSuspectReportPrompts()) do
+            local humanoid = prompt.Parent.Parent:FindFirstChildOfClass("Humanoid")
+            if humanoid and humanoid.Health <= 0 and isInRange(prompt) then
+                fireproximityprompt(prompt)
+            end
+        end
+    end
+    if Toggles.AutoDoor then
+        for _, prompt in ipairs(getDoorPrompts()) do
+            if isInRange(prompt) then fireproximityprompt(prompt) end
+        end
+    end
+    if Toggles.AutoArrest then
+        for _, prompt in ipairs(getCivilianPrompts()) do
+            local suspect = prompt.Parent.Parent
+            local humanoid = suspect:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                if prompt.Name == "ProximityPromptReportDead" and humanoid.Health <= 0 and isInRange(prompt) then
+                    fireproximityprompt(prompt)
+                elseif (prompt.Name == "ProximityPrompt" or prompt.Name == "ProximityPromptReport") 
+                    and humanoid.Health > 0 and isInRange(prompt) then
+                    fireproximityprompt(prompt)
+                end
+            end
+        end
+    end
+end)
+--Checkboxes
+AutoSection:Checkbox({
+    Value = false,
+    Label = "Auto Collect Evidence",
+    Callback = function(_, val) Toggles.AutoEvidence = val end
+})
+AutoSection:Checkbox({
+    Value = false,
+    Label = "Auto Report Suspects",
+    Callback = function(_, val) Toggles.AutoReport = val end
+})
+AutoSection:Checkbox({
+    Value = false,
+    Label = "Auto Breach Doors",
+    Callback = function(_, val) Toggles.AutoDoor = val end
+})
+AutoSection:Checkbox({
+    Value = false,
+    Label = "Auto Arrest Civilians",
+    Callback = function(_, val) Toggles.AutoArrest = val end
+})
+
+--//Discord Integration
+
+DiscordSection:Label({
+    Text = "Join the Discord for updates, support, and to suggest features!",
+    TextWrapped = true
+})
+DiscordSection:Button({
+    Text = "Copy Discord Invite",
     Callback = function()
         local textToCopy = "discord.gg/NVsvWfxv3K"
         setclipboard(textToCopy)
-        showMessage("Copied Invite")
-        
+        local DiscordPopup = Discord:PopupModal({
+            Title = "Join the Discord!",
+            AutoSize = "Y"
+        })
+        DiscordPopup:Label({
+            Text = [[Invite Copied to Clipboard!]],
+            TextWrapped = true
+        })
+        DiscordPopup:Button({
+            Text = "Okay",
+            Callback = function()
+                DiscordPopup:ClosePopup()
+            end,
+        })
+    end,
+})
+--//Settings
+SettingsSection:Button({
+    Text = "Unload Script",
+    Callback = function()
+        ReGui:Unload()
     end
 })
-local AutoEvidence
-tabs["Auto"]:Checkbox({
-    Value = false,
-    Label = "Auto Collect Evidence",
-    Callback = function(self, Value: boolean)
-        AutoEvidence = Value
-    end
-})
-local AutoReport
-tabs["Auto"]:Checkbox({
-    Value = false,
-    Label = "Auto Report Suspects",
-    Callback = function(self, Value: boolean)
-        AutoReport = Value
-    end
-})
-local AutoDoor
-tabs["Auto"]:Checkbox({
-    Value = false,
-    Label = "Auto Breach Doors",
-    Callback = function(self, Value: boolean)
-        AutoDoor = Value
-    end
-})
-local AutoArrest
-tabs["Auto"]:Checkbox({
-    Value = false, 
-    Label = "Auto Arrest Civilians",
-    Callback = function(self, Value: boolean)
-        AutoArrest = Value
+SettingsSection:Keybind({
+    Label = "Toggle Gui Keybind",
+    Value = Enum.KeyCode.Quote,
+    OnKeybindSet = function(self, KeyID)
+        GuiToggleKey = KeyID
     end
 })
 
-local evidenceNames = {
-    "Suitcase",
-    "Pile of guns",
-    "Laptop",
-    "Pile of money",
-    "MoneyStack",
-    "GunCarton",
-    "HardDrive",
-    "Radio",
-    "Radio",
-    "Cargo"
-}
-local prompts = {}
-
-
-local function collectPrompts()
-    prompts = {} -- reset each time to reflect current map state
-    local evidenceFolder = workspace.GAME.Suspects.Evidence
-    for _, evidence in ipairs(evidenceFolder:GetChildren()) do
-        if table.find(evidenceNames, evidence.Name) and evidence:FindFirstChild("EvidenceBag") then
-            local attachment = evidence.EvidenceBag:FindFirstChild("Attachment")
-            if attachment then
-                local prompt = attachment:FindFirstChild("ProximityPrompt")
-                if prompt then
-                    table.insert(prompts, prompt)
-                end
-            end
-        end
-    end
-end
-
-local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local root = character:WaitForChild("HumanoidRootPart")
-local EvidenceConnection
-EvidenceConnection = RunService.RenderStepped:Connect(function()
-    if AutoEvidence then
-        collectPrompts()  -- refresh prompts list every frame or you can call less often if you want
-
-        for i = #prompts, 1, -1 do
-            local prompt = prompts[i]
-            if prompt and prompt.Parent and prompt.Parent:IsA("Attachment") then
-                local promptPosition = prompt.Parent.WorldPosition
-                local distance = (root.Position - promptPosition).Magnitude
-                if distance <= prompt.MaxActivationDistance then
-                    fireproximityprompt(prompt)
-                end
-            else
-                table.remove(prompts, i)
-            end
-        end
-
-        if #prompts == 0 then
-            EvidenceConnection:Disconnect()
-        end
-    end
-end)
-local function getAllSuspectPrompts()
-    local suspectsFolder = workspace:WaitForChild("GAME"):WaitForChild("Suspects")
-    local prompts = {}
-
-    for _, suspect in ipairs(suspectsFolder:GetChildren()) do
-        if suspect.Name == "Suspect_Regular" or suspect.Name == "Suspect_Heavy" or suspect.Name == "Suspect_LawranceAccomplice" or suspect.Name == "Suspect_LawranceFairfax" then
-            local torso = suspect:FindFirstChild("Torso")
-            if torso then
-                local prompt = torso:FindFirstChild("ProximityPromptReportDead")
-                if prompt then
-                    table.insert(prompts, prompt)
-                end
-            end
-        end
-    end
-
-    return prompts
-end
-local prompts2 = getAllSuspectPrompts()
-local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local root = character:WaitForChild("HumanoidRootPart")
-local ReportConnection
-ReportConnection = RunService.RenderStepped:Connect(function()
-    if AutoReport then
-        for i = #prompts2, 1, -1 do  -- backwards to safely remove items
-            local prompt = prompts2[i]
-            if prompt and prompt.Parent and prompt.Parent:IsA("BasePart") then
-                local suspectModel = prompt.Parent.Parent
-                local humanoid = suspectModel and suspectModel:FindFirstChildOfClass("Humanoid")
-                local isDead = humanoid and humanoid.Health <= 0
-
-                if isDead then
-                    local promptPosition = prompt.Parent.Position
-                    local distance = (root.Position - promptPosition).Magnitude
-                    if distance <= prompt.MaxActivationDistance then
-                        fireproximityprompt(prompt)
-                        table.remove(prompts2, i)
-                    end
-                end
-            else
-                table.remove(prompts2, i)
-            end
-        end
-
-        if #prompts2 == 0 then
-            ReportConnection:Disconnect()
-        end
-    end
-end)
-local function getAllDoorPrompts()
-    local doorsFolder = workspace:WaitForChild("GAME"):WaitForChild("Doors")
-    local prompts = {}
-
-    for _, door in ipairs(doorsFolder:GetChildren()) do
-        -- Check for expected name or just include all, adjust if needed
-        if door.Name == "DoorV2.5_Wooden" or door.Name == "DoorV2.5_Metal" then
-            local lk1 = door:FindFirstChild("Components") 
-                          and door.Components:FindFirstChild("Interactions1") 
-                          and door.Components.Interactions1:FindFirstChild("LK1")
-            if lk1 then
-                local prompt = lk1:FindFirstChild("ProximityPrompt")
-                if prompt then
-                    table.insert(prompts, prompt)
-                end
-            end
-        end
-    end
-
-    return prompts
-end
-local prompts3 = getAllDoorPrompts()
-local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local root = character:WaitForChild("HumanoidRootPart")
-local DoorConnection
-DoorConnection = RunService.RenderStepped:Connect(function()
-    if AutoDoor then
-        for i = #prompts3, 1, -1 do
-            local prompt = prompts3[i]
-            if prompt and prompt.Parent and prompt.Parent:IsA("Attachment") then
-                local promptPosition = prompt.Parent.WorldPosition
-                local distance = (root.Position - promptPosition).Magnitude
-                if distance <= prompt.MaxActivationDistance then
-                    fireproximityprompt(prompt)
-                    table.remove(prompts3, i)
-                end
-            else
-                table.remove(prompts3, i)
-            end
-        end
-
-        if #prompts3 == 0 then
-            DoorConnection:Disconnect()
-        end
-    end
-end)
-local function getAllPrompts()
-    local prompts = {}
-
-    for _, suspect in ipairs(suspectsFolder:GetChildren()) do
-        if suspect.Name == "Civilian_LadyFairfax" or suspect.Name == "Civilian_HostageMMB" or suspect.Name == "Civilian_Madame" or suspect.Name == "Civilian_Melinda" or suspect.Name == "Civilian_Worker" then
-            local leftArm = suspect:FindFirstChild("Left Arm")
-            if leftArm then
-                local attachment = leftArm:FindFirstChild("Attachment")
-                if attachment then
-                    local prompt = attachment:FindFirstChild("ProximityPrompt")
-                    if prompt then
-                        table.insert(prompts, prompt)
-                    end
-                end
-            end
-
-            -- Attempt to get "Head" prompt
-            local head = suspect:FindFirstChild("Head")
-            if head then
-                local prompt = head:FindFirstChild("ProximityPromptReport")
-                if prompt then
-                    table.insert(prompts, prompt)
-                end
-            end
-            local torso = suspect:FindFirstChild("Torso")
-            if torso then
-                local prompt = torso:FindFirstChild("ProximityPromptReportDead")
-                if prompt then
-                    table.insert(prompts, prompt)
-                end
-            end
-        end
-    end
-    return prompts
-end
-local ArrestConnection
-ArrestConnection = RunService.RenderStepped:Connect(function()
-    if AutoArrest then
-        local prompts2 = getAllPrompts()
-
-        for i = #prompts2, 1, -1 do
-            local prompt = prompts2[i]
-            if prompt and prompt.Parent and (prompt.Parent:IsA("BasePart") or prompt.Parent:IsA("Attachment")) then
-                local suspectModel = prompt.Parent.Parent
-                local humanoid = suspectModel and suspectModel:FindFirstChildOfClass("Humanoid")
-                local isAlive = humanoid and humanoid.Health > 0
-                local isDead = humanoid and humanoid.Health <= 0
-
-                local promptName = prompt.Name
-
-                local shouldFire = false
-                if promptName == "ProximityPromptReportDead" then
-                    -- Only fire if dead
-                    shouldFire = isDead
-                elseif promptName == "ProximityPrompt" or promptName == "ProximityPromptReport" then
-                    -- Only fire if alive
-                    shouldFire = isAlive
-                end
-
-                if shouldFire then
-                    local promptPosition = (prompt.Parent:IsA("Attachment") and prompt.Parent.WorldPosition) or prompt.Parent.Position
-                    local distance = (root.Position - promptPosition).Magnitude
-                    if distance <= prompt.MaxActivationDistance then
-                        fireproximityprompt(prompt)
-                        table.remove(prompts2, i)
-                    end
-                else
-                    table.remove(prompts2, i)
-                end
-            else
-                table.remove(prompts2, i)
-            end
-        end
-
-        if #prompts2 == 0 then
-            ArrestConnection:Disconnect()
-        end
-    end
-end)
-
---You def like femboys
+--We endorse femboy love
