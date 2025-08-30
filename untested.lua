@@ -150,13 +150,14 @@ local Camera = Workspace.CurrentCamera
 local humanoid = character:WaitForChild("Humanoid")
 local rootPart = character:WaitForChild("HumanoidRootPart")
 
-local GuiToggleKey = Enum.KeyCode.Q
+local GuiToggleKey = Enum.KeyCode.Quote
 local guiVisible = true
+local GuiRoot = Window.Parent
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     if input.KeyCode == GuiToggleKey then
         guiVisible = not guiVisible
-        Window.Visible = guiVisible
+        GuiRoot.Enabled = guiVisible
     end
 end)
 
@@ -668,7 +669,7 @@ SettingsSection:Button({
 })
 SettingsSection:Keybind({
     Label = "Toggle Gui Keybind",
-    Value = Enum.KeyCode.Q,
+    Value = Enum.KeyCode.Quote,
     OnKeybindSet = function(self, KeyID)
         GuiToggleKey = KeyID
     end
