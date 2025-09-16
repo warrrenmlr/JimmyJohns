@@ -121,12 +121,12 @@ local function CreateRegion(Parent, Title)
 	return Region
 end
 
+--// Regions n shit
 local General = CreateTab("General", 139650104834071) --change to a better icon
 local Char = CreateTab("Character", "rbxassetid://18854794412")
 local Settings = CreateTab("Settings", "rbxassetid://4483345998")
 local Discord = CreateTab("Discord", "rbxassetid://84828491431270")
 
---// General Tab
 local FishingSection = CreateRegion(General, "Fishing")
 local VisSection = CreateRegion(General, "Visual")
 local AutoSection = CreateRegion(Char, "Auto")
@@ -196,10 +196,19 @@ gethrp = function()
 end
 
 --//Fishing Section
+--checks or smth.
+CheckRS = RunService.Heartbeat:Connect(function()
+    local ReelUI = LocalPlayer.PlayerGui:FindFirstChild("reel")
+    if ReelUI then local Bar = ReelUI and ReelUI:FindFirstChild("bar")
+        if Bar then local PlayerBar, TargetBar = Bar and Bar:FindFirstChild("playerbar"), Bar and Bar:FindFirstChild("fish") end
+    end
+end)
+
 local ReelUI = LocalPlayer.PlayerGui:FindFirstChild("reel")
 local Bar = ReelUI and ReelUI:FindFirstChild("bar")
 local PlayerBar, TargetBar = Bar and Bar:FindFirstChild("playerbar"), Bar and Bar:FindFirstChild("fish")
 local ShakeUI = LocalPlayer.PlayerGui:FindFirstChild("shakeui")
+local ShakeSafezone = LocalPlayer.PlayerGui:FindFirstChild('shakeui'):FindFirstChild('safezone')
 local ShakeButton = LocalPlayer.PlayerGui['shakeui']['safezone']:FindFirstChild('button')
 --Casting 
 AutoCastActive =false
@@ -227,26 +236,21 @@ FishingSection:Checkbox({
         end
     end
 })
-AutoCastRS = RunService.Heartbeat.Connect(function()
+AutoCastRS = RunService.Heartbeat:Connect(function()
     if AutoCastActive then
         local rod = FindRod()
-        if AutoCastMode == "Hidden - Fast" then --***fuckass vim dont work***
-            if not PlayerBar and not TargetBar and not ShakeUI then
-                local rod = nil
-                if FindChildOfClass(getchar(), "Tool") and FindChild(FindChildOfClass(getchar(), "Tool"), "values") then
-                    vim:SendMouseButtonEvent(0, 0, Enum.UserInputType.MouseButton1, true, game, 0) -- change coords to wherever
-                    task.wait(0.01)
-                    vim:SendMouseButtonEvent(0, 0, Enum.UserInputType.MouseButton1, false, game, 0)
-                end
+        if AutoCastMode == "Hidden - Fast" then --***fuckass vim dont work*** (mby) 
+            if rod then
+                vim:SendMouseButtonEvent(0, 0, Enum.UserInputType.MouseButton1, true, game, 0) -- change coords to wherever
+                task.wait(0.01)
+                vim:SendMouseButtonEvent(0, 0, Enum.UserInputType.MouseButton1, false, game, 0)
             end
-        elseif AutoCastMode == "Hidden - Delayed" then --***fuckass vim dont work***
-            if not PlayerBar and not TargetBar and not ShakeUI then
-                local rod = nil
-                if FindChildOfClass(getchar(), "Tool") and FindChild(FindChildOfClass(getchar(), "Tool"), "values") then
-                    game:GetService('VirtualInputManager'):SendMouseButtonEvent(0, 0, Enum.UserInputType.MouseButton1, true, game, 0) 
-                    task.wait(0.5)
-                    game:GetService('VirtualInputManager'):SendMouseButtonEvent(0, 0, Enum.UserInputType.MouseButton1, false, game, 0)
-                end
+        elseif AutoCastMode == "Hidden - Delayed" then --***fuckass vim dont work*** (mby)
+            if rod then
+                game:GetService('VirtualInputManager'):SendMouseButtonEvent(0, 0, Enum.UserInputType.MouseButton1, true, game, 0) 
+                task.wait(0.5)
+                game:GetService('VirtualInputManager'):SendMouseButtonEvent(0, 0, Enum.UserInputType.MouseButton1, false, game, 0)
+                
             end
         elseif AutoCastMode == "Normal" then --This should work for now
             if rod then
@@ -273,9 +277,9 @@ FishingSection:Checkbox({
         end
     end
 })
-AutoShakeRS = RunService.Heartbeat.Connect(function()
+AutoShakeRS = RunService.Heartbeat:Connect(function()
     if AutoShakeActive then
-        if ShakeUI and ShakeButton then
+        if ShakeUI and ShakeSafezone and ShakeButton then
             GuiService.SelectedObject = LocalPlayer.PlayerGui['shakeui']['safezone']['button']
             if GuiService.SelectedObject == LocalPlayer.PlayerGui['shakeui']['safezone']['button'] then
                 game:GetService('VirtualInputManager'):SendKeyEvent(true, Enum.KeyCode.Return, false, game)
@@ -284,7 +288,7 @@ AutoShakeRS = RunService.Heartbeat.Connect(function()
         end
     end
 end)
---This is really shit, figure out how to change pos of the buttons and autoclick for more better
+--This is really shit, figure out how to change pos of the buttons and autoclick for more better. If unable, you can also click by finding pos and using vim to click at pos (mby)
 --Reeling
 AutoReelActive = false
 AutoReelMode = "Clamp"
@@ -302,18 +306,54 @@ FishingSection:Checkbox({
                     AutoReelMode = ComboValue
                 end
             })
-            FishingSection:Label({
+            AutoReelText = FishingSection:Label({
                 Text = "Warning! Instant may be detected soon!"
             })
         else
             AutoReelActive = false
-            if AutoReelCombo then
+            if AutoReelCombo and AutoReelText then
                 AutoReelCombo:Destroy()
                 AutoReelCombo = nil
-
+                AutoReelText:Destroy()
+                AutoReelText = nil
             end
         end
     end
 })
+AutoReelRS = RunService.Heartbeat:Connect(function()
+    if AutoReelActive then
+        if AutoReelMode == "Clamp" then
+            local ReelUI = LocalPlayer.PlayerGui:FindFirstChild("reel")
+            if not ReelUI then return end
+    
+            local Bar = ReelUI:FindFirstChild("bar")
+            if not Bar then return end
+    
+            local PlayerBar = Bar:FindFirstChild("playerbar")
+            local TargetBar = Bar:FindFirstChild("fish")
+            if not PlayerBar or not TargetBar then return end
+    
+            
+            local unfiltered = PlayerBar.Position:Lerp(TargetBar.Position, 0.7)
+            local clampedX = math.clamp(unfiltered.X.Scale, 0.15, 0.85)
+            local newPos = UDim2.new(clampedX, 0, unfiltered.Y.Scale, 0)
+    
+            PlayerBar.Position = newPos
+        elseif AutoReelMode == "Instant" then
+            local ReelUI = LocalPlayer.PlayerGui:FindFirstChild("reel") --should be able to remove all the definitions. mby. 
+            if not ReelUI then return end
+
+            local Bar = ReelUI:FindFirstChild("bar")
+            if not Bar then return end
+
+            local PlayerBar = Bar:FindFirstChild("playerbar")
+            local TargetBar = Bar:FindFirstChild("fish")
+            if not PlayerBar or not TargetBar then return end
+
+            local args = {100, true}
+            game:GetService("ReplicatedStorage"):WaitForChild("events"):WaitForChild("reelfinished "):FireServer(unpack(args))
+        end
+    end
+end)
 
 --Use the helper funcs, idk why it aint working without. And figure out a way to fix configs if possible.
