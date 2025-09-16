@@ -128,9 +128,9 @@ local Settings = CreateTab("Settings", "rbxassetid://4483345998")
 local Discord = CreateTab("Discord", "rbxassetid://84828491431270")
 
 local FishingSection = CreateRegion(General, "Fishing")
-local VisSection = CreateRegion(General, "Visual")
-local AutoSection = CreateRegion(Char, "Auto")
-local CharSection = CreateRegion(Char, "Character")
+local VisSection = CreateRegion(General, "Configs???")
+local AutoSection = CreateRegion(Char, "Character")
+local CharSection = CreateRegion(Char, "Teleports??")
 local DiscordSection = CreateRegion(Discord, "Discord")
 local SettingsSection = CreateRegion(Settings, "Settings")
 
@@ -202,14 +202,11 @@ CheckRS = RunService.Heartbeat:Connect(function()
     if ReelUI then local Bar = ReelUI and ReelUI:FindFirstChild("bar")
         if Bar then local PlayerBar, TargetBar = Bar and Bar:FindFirstChild("playerbar"), Bar and Bar:FindFirstChild("fish") end
     end
+    local ShakeUI = LocalPlayer.PlayerGui:FindFirstChild("shakeui")
+    if ShakeUI then local ShakeSafezone = LocalPlayer.PlayerGui:FindFirstChild('shakeui'):FindFirstChild('safezone') 
+        if ShakeSafezone then local ShakeButton = LocalPlayer.PlayerGui['shakeui']['safezone']:FindFirstChild('button') end
+    end
 end)
-
-local ReelUI = LocalPlayer.PlayerGui:FindFirstChild("reel")
-local Bar = ReelUI and ReelUI:FindFirstChild("bar")
-local PlayerBar, TargetBar = Bar and Bar:FindFirstChild("playerbar"), Bar and Bar:FindFirstChild("fish")
-local ShakeUI = LocalPlayer.PlayerGui:FindFirstChild("shakeui")
-local ShakeSafezone = LocalPlayer.PlayerGui:FindFirstChild('shakeui'):FindFirstChild('safezone')
-local ShakeButton = LocalPlayer.PlayerGui['shakeui']['safezone']:FindFirstChild('button')
 --Casting 
 AutoCastActive =false
 AutoCastMode = "Normal"
